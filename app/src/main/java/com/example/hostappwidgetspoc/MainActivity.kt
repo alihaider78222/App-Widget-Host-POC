@@ -6,11 +6,20 @@ import android.appwidget.AppWidgetProviderInfo
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
+import android.view.ViewGroup
+import android.widget.GridLayout
 import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
+import androidx.core.view.size
+import androidx.customview.widget.ExploreByTouchHelper
 import androidx.navigation.ui.AppBarConfiguration
 import com.example.hostappwidgetspoc.databinding.ActivityMainBinding
 
@@ -29,7 +38,7 @@ class MainActivity : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
 
-//        appWidgetHost = AppWidgetHost(this, ExploreByTouchHelper.HOST_ID)
+    //   appWidgetHost = AppWidgetHost(this, ExploreByTouchHelper.HOST_ID)
 //        appWidgetManager = AppWidgetManager.getInstance(this)
 //        val installedPackages = appWidgetManager?.getInstalledProviders()
 //        println("Installed Packages are : $installedPackages");
@@ -50,17 +59,19 @@ class MainActivity : AppCompatActivity() {
         // Populate app icons
 
         // Populate app icons
-        val appList: List<ResolveInfo> = getInstalledApps() as List<ResolveInfo>
-        for (appInfo in appList) {
-            val appIcon = ImageView(this)
-            appIcon.setImageDrawable(appInfo.loadIcon(packageManager))
-            appIcon.setOnClickListener { view: View? ->
-                launchApp(
-                    appInfo
-                )
-            }
-            binding.gridLayout.addView(appIcon)
-        }
+
+        getSettingsWidgetInfo()
+        /* val appList: List<ResolveInfo> = getInstalledApps() as List<ResolveInfo>
+         for (appInfo in appList) {
+             val appIcon = ImageView(this)
+             appIcon.setImageDrawable(appInfo.loadIcon(packageManager))
+             appIcon.setOnClickListener { view: View? ->
+                 launchApp(
+                     appInfo
+                 )
+             }
+             binding.gridLayout.addView(appIcon)
+         }*/
 
 
 //        val navController = findNavController(R.id.nav_host_fragment_content_main)
@@ -96,7 +107,7 @@ class MainActivity : AppCompatActivity() {
             val widgetInfo = getSettingsWidgetInfo() // for settings
 
             if (widgetInfo != null) {
-                println("widgetInfo is : $widgetInfo");
+               /* println("widgetInfo is : $widgetInfo");
 
                 val appWidgetId = appWidgetHost!!.allocateAppWidgetId()
                 println("appWidgetId is : $appWidgetId");
@@ -111,10 +122,12 @@ class MainActivity : AppCompatActivity() {
                 val widgetView = appWidgetHost!!.createView(
                     this, appWidgetId, widgetInfo
                 )
+
+                widgetView.setBackgroundColor(resources.getColor(R.color.black))
+
                 println("widgetView is : $widgetView");
-                binding.gridLayout.addView(widgetView)
-                binding.gridLayout.requestLayout();
-                binding.gridLayout.invalidate();
+                binding.gridLayout.requestLayout()
+                binding.gridLayout.invalidate()*/
             } else {
                 println("widgetInfo is NULL");
             }
@@ -130,19 +143,47 @@ class MainActivity : AppCompatActivity() {
 //        launchIntent?.let { startActivity(it) }
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     private fun getSettingsWidgetInfo(): AppWidgetProviderInfo? {
         val appWidgetManager = AppWidgetManager.getInstance(this)
         val widgetInfos = appWidgetManager.installedProviders
         println("widgetInfos are : $widgetInfos");
         for (info in widgetInfos) {
-            println("info.provider.className :  ${info.provider.className}");
 
-//            if (info.provider.className == "com.transsion.alarmclock.AnalogAppWidgetProvider") // For Small Devices
-            if (info.provider.className == "com.sec.android.widgetapp.analogclock.AnalogClockWidgetProvider") // For High devices
-            {
-                return info
+           // info.maxResizeWidth = 50
+            println("info.provider.className :  ${info.provider}");
 
-            }
+
+            println("widgetInfo is : $info.");
+
+            val appWidgetId = appWidgetHost!!.allocateAppWidgetId()
+            println("appWidgetId is : $appWidgetId");
+            val widgetView = appWidgetHost!!.createView(
+                this, appWidgetId, info
+            )
+            val header  = TextView(this)
+            header.text = info.loadLabel(packageManager)
+            header.textSize  = 25.0f
+            header.setTextColor(resources.getColor(R.color.white))
+            val linearLayout =  LinearLayout(this)
+            linearLayout.orientation  = LinearLayout.VERTICAL
+            linearLayout.layoutParams  = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,LinearLayout.LayoutParams.WRAP_CONTENT)
+
+            linearLayout.addView(header)
+            linearLayout.addView(widgetView)
+
+           Log.i("APP WIDGET INFO OF ${info.provider.packageName} ", " ${ widgetView.appWidgetInfo}")
+
+
+            widgetView.setBackgroundColor(resources.getColor(R.color.red))
+
+
+            println("widgetView is : $widgetView");
+            binding.mainLayout.addView(linearLayout)
+            binding.mainLayout.requestLayout()
+            binding.mainLayout.invalidate()
+
+
         }
         return null // Widget not found
     }
