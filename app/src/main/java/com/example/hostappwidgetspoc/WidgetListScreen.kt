@@ -48,7 +48,7 @@ class WidgetListScreen : AppCompatActivity() {
     }
 
 
-    fun createWidgetView(widgetName:String,widgetIcon:Drawable,widgetPreView:Drawable,provider:AppWidgetProviderInfo){
+    private fun createWidgetView(widgetName:String, widgetIcon:Drawable, widgetPreView:Drawable, provider:AppWidgetProviderInfo){
         widgetItemBinding  = WidgetItemLayoutBinding.inflate(LayoutInflater.from(this))
         widgetItemBinding.lable.text = widgetName
         widgetItemBinding.widgetIcon.setImageDrawable(widgetIcon)
@@ -68,12 +68,33 @@ class WidgetListScreen : AppCompatActivity() {
                     finish()
 
                 }
+                else{
+                    val intent = Intent(AppWidgetManager.ACTION_APPWIDGET_BIND)
+                    intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, it)
+                    intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_PROVIDER, provider.provider)
+                    startActivityForResult(
+                        intent,
+                        123
+                    )
+                }
 
             }
 
         }
+    }
 
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
 
+        if(resultCode== RESULT_OK){
+            if(requestCode==123){
+                val localId = data?.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,-1)
+                val intent  = Intent()
+                intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,localId)
+                setResult(RESULT_OK,intent)
+                finish()
+            }
+        }
     }
 }
