@@ -3,4 +3,10 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="red">#870F0F</color>
+    <color name="my_dark_primary">#7412BF74</color>
+    <color name="my_light_primary">#7440755E</color>
+    <color name="purple_500">#745F229A</color>
+    <color name="purple_700">#743C1561</color>
+    <color name="teal_200">#74EFE750</color>
+    <color name="teal_700">#74F4EA20</color>
 </resources>

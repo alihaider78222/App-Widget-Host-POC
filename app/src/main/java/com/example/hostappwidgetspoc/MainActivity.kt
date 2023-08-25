@@ -6,19 +6,16 @@ import android.appwidget.AppWidgetProviderInfo
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
+import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.View
-import android.view.ViewGroup
-import android.widget.GridLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
-import androidx.core.view.size
 import androidx.customview.widget.ExploreByTouchHelper
 import androidx.navigation.ui.AppBarConfiguration
 import com.example.hostappwidgetspoc.databinding.ActivityMainBinding
@@ -38,6 +35,9 @@ class MainActivity : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
 
+
+
+
     //   appWidgetHost = AppWidgetHost(this, ExploreByTouchHelper.HOST_ID)
 //        appWidgetManager = AppWidgetManager.getInstance(this)
 //        val installedPackages = appWidgetManager?.getInstalledProviders()
@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity() {
 //        setSupportActionBar(binding.toolbar)
 
         appWidgetManager = AppWidgetManager.getInstance(this)
-        appWidgetHost = AppWidgetHost(this, WIDGET_HOST_ID)
+        appWidgetHost = AppWidgetHost(this, ExploreByTouchHelper.HOST_ID)
         packageManager = getPackageManager()
 
         // Populate app icons
@@ -143,12 +143,17 @@ class MainActivity : AppCompatActivity() {
 //        launchIntent?.let { startActivity(it) }
     }
 
+
+
     @RequiresApi(Build.VERSION_CODES.S)
     private fun getSettingsWidgetInfo(): AppWidgetProviderInfo? {
+        val sTmpRect = Rect()
         val appWidgetManager = AppWidgetManager.getInstance(this)
         val widgetInfos = appWidgetManager.installedProviders
         println("widgetInfos are : $widgetInfos");
         for (info in widgetInfos) {
+
+
 
            // info.maxResizeWidth = 50
             println("info.provider.className :  ${info.provider}");
@@ -156,32 +161,104 @@ class MainActivity : AppCompatActivity() {
 
             println("widgetInfo is : $info.");
 
-            val appWidgetId = appWidgetHost!!.allocateAppWidgetId()
-            println("appWidgetId is : $appWidgetId");
-            val widgetView = appWidgetHost!!.createView(
-                this, appWidgetId, info
+
+            var options  = Bundle()
+            options.putInt(
+                AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH,
+                sTmpRect.left - 20
             )
+
+            options.putInt(
+                AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT,
+             sTmpRect.top - 20
+            )
+            options.putInt(
+                AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH,
+               sTmpRect.right - 20
+            )
+            options.putInt(
+                AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, sTmpRect.bottom - 20
+            )
+
+
+
+            val appWidgetId = appWidgetHost!!.allocateAppWidgetId()
+            val success  = appWidgetManager.bindAppWidgetIdIfAllowed(appWidgetId,info.provider,options)
+
+
+           // val widgetOption = appWidgetManager.getAppWidgetOptions(appWidgetId)
+
+
+            if(info.provider.className=="com.google.android.calendar.widgetmonth.MonthViewWidgetProvider"){
+
+
+
+                val intent = Intent(AppWidgetManager.ACTION_APPWIDGET_BIND).apply {
+                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_PROVIDER, info.provider)
+                    // This is the options bundle described in the preceding section.
+                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_OPTIONS, options)
+                }
+                startActivityForResult(intent, 123)
+
+
+
+                val widgetHost = appWidgetHost!!.createView(
+                    this, appWidgetId, info
+                )
+
+                widgetHost.setAppWidget(appWidgetId,info)
+                widgetHost.setBackgroundColor(resources.getColor(R.color.red))
+
+
+                binding.mainLayout.addView(widgetHost)
+                binding.mainLayout.requestLayout()
+                binding.mainLayout.invalidate()
+
+            }
+
+
+
+
+
+            val widgetView  = LinearLayout(this)
+
+             widgetView.layoutParams  = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.WRAP_CONTENT)
+            widgetView.orientation = LinearLayout.VERTICAL
+            val name  =  TextView(this)
+            name.text  = info.loadLabel(packageManager)
+            name.setTextColor(resources.getColor(R.color.black))
+            name.textSize = 40f
+            widgetView.addView(name)
+
+
+            val preview = ImageView(this)
+            val previewParams  = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.MATCH_PARENT)
+            preview.scaleType = ImageView.ScaleType.CENTER_CROP
+            preview.layoutParams  = previewParams
+            preview.setImageDrawable(info.loadPreviewImage(this,400))
+
+
+
+            widgetView.addView(preview)
+
             val header  = TextView(this)
             header.text = info.loadLabel(packageManager)
             header.textSize  = 25.0f
-            header.setTextColor(resources.getColor(R.color.white))
+            header.setTextColor(resources.getColor(R.color.black))
             val linearLayout =  LinearLayout(this)
             linearLayout.orientation  = LinearLayout.VERTICAL
-            linearLayout.layoutParams  = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,LinearLayout.LayoutParams.WRAP_CONTENT)
+            linearLayout.layoutParams  = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.MATCH_PARENT)
 
             linearLayout.addView(header)
-            linearLayout.addView(widgetView)
-
-           Log.i("APP WIDGET INFO OF ${info.provider.packageName} ", " ${ widgetView.appWidgetInfo}")
+          //  linearLayout.addView(widgetHost)
 
 
-            widgetView.setBackgroundColor(resources.getColor(R.color.red))
+
+        //   Log.i("APP WIDGET INFO OF ${info.provider.packageName} ", " ${ widgetView.appWidgetInfo}")
 
 
-            println("widgetView is : $widgetView");
-            binding.mainLayout.addView(linearLayout)
-            binding.mainLayout.requestLayout()
-            binding.mainLayout.invalidate()
+
 
 
         }
